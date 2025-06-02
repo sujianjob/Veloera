@@ -3,6 +3,8 @@ package transcription
 import (
 	"context"
 	"io"
+	"time"
+	"veloera/constant"
 	"veloera/model"
 )
 
@@ -75,6 +77,13 @@ type BaseAdaptor struct {
 	Config     *AdaptorConfig
 	EngineName string
 	EngineType int
+
+	// 引擎能力配置
+	MaxFileSize        int64
+	MaxDuration        int
+	SupportedFormats   []string
+	SupportedLanguages []string
+	SupportedOutputFormats []string
 }
 
 // 实现基础方法
@@ -84,6 +93,41 @@ func (b *BaseAdaptor) GetEngineName() string {
 
 func (b *BaseAdaptor) GetEngineType() int {
 	return b.EngineType
+}
+
+func (b *BaseAdaptor) GetSupportedFormats() []string {
+	if len(b.SupportedFormats) == 0 {
+		return constant.GetAllSupportedFormats()
+	}
+	return b.SupportedFormats
+}
+
+func (b *BaseAdaptor) GetSupportedLanguages() []string {
+	if len(b.SupportedLanguages) == 0 {
+		return constant.GetSupportedLanguageCodes()
+	}
+	return b.SupportedLanguages
+}
+
+func (b *BaseAdaptor) GetMaxFileSize() int64 {
+	if b.MaxFileSize == 0 {
+		return constant.DefaultMaxFileSize
+	}
+	return b.MaxFileSize
+}
+
+func (b *BaseAdaptor) GetMaxDuration() int {
+	if b.MaxDuration == 0 {
+		return constant.DefaultMaxDuration
+	}
+	return b.MaxDuration
+}
+
+func (b *BaseAdaptor) GetSupportedOutputFormats() []string {
+	if len(b.SupportedOutputFormats) == 0 {
+		return []string{"json", "srt", "txt", "vtt"}
+	}
+	return b.SupportedOutputFormats
 }
 
 func (b *BaseAdaptor) SetConfig(config map[string]interface{}) error {

@@ -95,7 +95,7 @@ func GetTranscriptionEngines(c *gin.Context) {
 	}
 	
 	// 获取所有渠道（转录引擎）
-	channels, err := model.GetAllChannels(0, 0)
+	channels, err := model.GetAllChannels(0, 0, true, false)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"success": false,
@@ -183,17 +183,19 @@ func CreateTranscriptionEngine(c *gin.Context) {
 	}
 	
 	// 创建渠道记录
+	baseURL := req.BaseURL
+	weight := uint(req.Weight)
 	channel := &model.Channel{
 		Name:               req.Name,
 		Type:               1, // 转录服务类型
 		EngineType:         req.EngineType,
 		Key:                req.APIKey,
-		BaseURL:            req.BaseURL,
+		BaseURL:            &baseURL,
 		MaxFileSize:        req.MaxFileSize,
 		MaxDuration:        req.MaxDuration,
 		SupportedFormats:   req.SupportedFormats,
 		SupportedLanguages: req.SupportedLanguages,
-		Weight:             req.Weight,
+		Weight:             &weight,
 		Status:             req.Status,
 		Group:              req.GroupName,
 		CreatedTime:        common.GetTimestamp(),
@@ -273,7 +275,8 @@ func UpdateTranscriptionEngine(c *gin.Context) {
 		channel.Key = req.APIKey
 	}
 	if req.BaseURL != "" {
-		channel.BaseURL = req.BaseURL
+		baseURL := req.BaseURL
+		channel.BaseURL = &baseURL
 	}
 	if req.MaxFileSize > 0 {
 		channel.MaxFileSize = req.MaxFileSize
@@ -288,7 +291,8 @@ func UpdateTranscriptionEngine(c *gin.Context) {
 		channel.SupportedLanguages = req.SupportedLanguages
 	}
 	if req.Weight > 0 {
-		channel.Weight = req.Weight
+		weight := uint(req.Weight)
+		channel.Weight = &weight
 	}
 	if req.Status > 0 {
 		channel.Status = req.Status
