@@ -36,6 +36,10 @@ func SetApiRouter(router *gin.Engine) {
 		apiRouter.GET("/oauth/telegram/login", middleware.CriticalRateLimit(), controller.TelegramLogin)
 		apiRouter.GET("/oauth/telegram/bind", middleware.CriticalRateLimit(), controller.TelegramBind)
 
+		// 转录服务公开接口
+		apiRouter.GET("/transcription/languages", controller.GetSupportedLanguages)
+		apiRouter.GET("/transcription/formats", controller.GetSupportedFormats)
+
 		userRoute := apiRouter.Group("/user")
 		{
 			userRoute.POST("/register", middleware.CriticalRateLimit(), middleware.TurnstileCheck(), controller.Register)
@@ -62,6 +66,16 @@ func SetApiRouter(router *gin.Engine) {
 				selfRoute.PUT("/setting", controller.UpdateUserSetting)
 				selfRoute.GET("/check_in_status", controller.CheckInStatus)
 				selfRoute.POST("/check_in", controller.CheckIn)
+
+				// 转录服务用户接口
+				selfRoute.POST("/transcription/tasks", controller.CreateTranscriptionTask)
+				selfRoute.GET("/transcription/tasks", controller.GetUserTranscriptionTasks)
+				selfRoute.GET("/transcription/tasks/:id", controller.GetTranscriptionTask)
+				selfRoute.GET("/transcription/tasks/:id/download", controller.DownloadTranscriptionResult)
+				selfRoute.GET("/transcription/tasks/:id/preview", controller.PreviewTranscriptionResult)
+				selfRoute.PUT("/transcription/tasks/:id/cancel", controller.CancelTranscriptionTask)
+				selfRoute.DELETE("/transcription/tasks/:id", controller.DeleteTranscriptionTask)
+				selfRoute.GET("/transcription/stats", controller.GetUserTranscriptionStats)
 			}
 
 			adminRoute := userRoute.Group("/")
@@ -107,6 +121,21 @@ func SetApiRouter(router *gin.Engine) {
 			channelRoute.GET("/fetch_models/:id", controller.FetchUpstreamModels)
 			channelRoute.POST("/fetch_models", controller.FetchModels)
 			channelRoute.POST("/batch/tag", controller.BatchSetChannelTag)
+		}
+
+		// 转录引擎管理接口
+		transcriptionRoute := apiRouter.Group("/transcription")
+		transcriptionRoute.Use(middleware.AdminAuth())
+		{
+			transcriptionRoute.GET("/engines", controller.GetTranscriptionEngines)
+			transcriptionRoute.GET("/engines/types", controller.GetTranscriptionEngineTypes)
+			transcriptionRoute.POST("/engines", controller.CreateTranscriptionEngine)
+			transcriptionRoute.PUT("/engines/:id", controller.UpdateTranscriptionEngine)
+			transcriptionRoute.DELETE("/engines/:id", controller.DeleteTranscriptionEngine)
+			transcriptionRoute.POST("/engines/:id/test", controller.TestTranscriptionEngine)
+			transcriptionRoute.PUT("/engines/batch/status", controller.BatchUpdateTranscriptionEngineStatus)
+			transcriptionRoute.GET("/tasks", controller.GetAllTranscriptionTasks)
+			transcriptionRoute.GET("/stats", controller.GetSystemTranscriptionStats)
 		}
 		tokenRoute := apiRouter.Group("/token")
 		tokenRoute.Use(middleware.UserAuth())
