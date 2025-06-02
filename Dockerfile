@@ -1,11 +1,15 @@
 FROM oven/bun:latest AS builder
 
 WORKDIR /build
-COPY web/package.json .
+COPY web/package.json web/package.json
+COPY web/bun.lockb web/bun.lockb
+WORKDIR /build/web
 RUN bun install
-COPY ./web .
+WORKDIR /build
+COPY ./web ./web
 COPY ./VERSION .
-RUN DISABLE_ESLINT_PLUGIN='true' VITE_REACT_APP_VERSION=$(cat VERSION) bun run build
+WORKDIR /build/web
+RUN DISABLE_ESLINT_PLUGIN='true' VITE_REACT_APP_VERSION=$(cat ../VERSION) bun run build
 
 FROM golang:alpine AS builder2
 
@@ -19,7 +23,7 @@ ADD go.mod go.sum ./
 RUN go mod download
 
 COPY . .
-COPY --from=builder /build/dist ./web/dist
+COPY --from=builder /build/web/dist ./web/dist
 RUN go build -ldflags "-s -w -X 'veloera/common.Version=$(cat VERSION)'" -o veloera
 
 FROM alpine
