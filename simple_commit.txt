@@ -1,0 +1,71 @@
+# 简化版 Git 提交命令
+
+## 方法一：一次性添加所有文件
+```bash
+# 添加所有新文件和修改
+git add .
+
+# 执行提交
+git commit -m "feat: 完整改造 Veloera 为音视频转录服务平台
+
+🎯 将 Veloera 从 AI 服务中转平台改造为专业的音视频转录服务平台
+
+✨ 主要功能:
+• 多格式支持: MP3, MP4, WAV, M4A, FLAC, AAC, OGG, AVI, MOV, MKV 等
+• 多语言转录: 中文、英语、日语、韩语等，支持自动检测  
+• 多引擎支持: OpenAI Whisper, 阿里云, 腾讯云, 百度云
+• 实时进度跟踪: 上传进度、转录进度实时更新
+• 多种输出格式: JSON, SRT, TXT, VTT
+• 精确计费系统: 按时长计费，支持预扣费和退款
+• 负载均衡: 多转录引擎智能调度和故障转移
+
+🔧 技术栈:
+• 后端: Go + Gin + GORM + MySQL/Redis
+• 前端: React + TypeScript + Ant Design  
+• 部署: Docker + Docker Compose + Nginx
+
+🔄 向后兼容: 保留原有用户管理、计费、配额管理等核心功能"
+```
+
+## 方法二：分步骤提交
+```bash
+# 1. 添加后端核心文件
+git add model/transcription.go service/transcription_service.go service/transcription/ controller/transcription*.go constant/transcription.go
+
+# 2. 添加前端文件
+git add web_v2/src/components/Transcription*.tsx web_v2/src/pages/TranscriptionPage.tsx web_v2/src/services/transcription.ts
+
+# 3. 添加部署配置
+git add docker-compose.transcription.yml nginx/transcription.conf scripts/deploy-transcription.sh docs/转录服务部署指南.md
+
+# 4. 添加数据库迁移和修改的文件
+git add migration/001_transcription_tables.sql model/main.go model/log.go model/channel.go
+
+# 5. 执行提交
+git commit -m "feat: 完整改造 Veloera 为音视频转录服务平台
+
+保留原有基础设施，新增完整转录功能，支持多格式、多语言、多引擎。
+包含前后端完整实现、部署配置和详细文档。"
+```
+
+## 推送到远程仓库
+```bash
+# 推送主分支
+git push origin main
+
+# 创建版本标签
+git tag -a v2.0.0-transcription -m "Veloera 转录服务版本 - 完整改造版本"
+git push origin v2.0.0-transcription
+```
+
+## 检查提交状态
+```bash
+# 查看提交历史
+git log --oneline -5
+
+# 查看文件变更统计
+git diff --stat HEAD~1 HEAD
+
+# 查看具体变更
+git show --name-only HEAD
+```

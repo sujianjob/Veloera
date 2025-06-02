@@ -254,6 +254,8 @@ func migrateDB() error {
 		&QuotaData{},
 		&Task{},
 		&Setup{},
+		&TranscriptionTask{},
+		&FileStorage{},
 	}
 
 	for _, model := range modelsToMigrate {

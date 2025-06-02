@@ -50,7 +50,7 @@ func CreateTranscriptionTask(c *gin.Context) {
 	}
 	
 	// 验证文件大小
-	maxSize := int64(common.GetOrDefaultInt("MAX_FILE_SIZE", constant.DefaultMaxFileSize))
+	maxSize := int64(common.GetEnvOrDefault("MAX_FILE_SIZE", constant.DefaultMaxFileSize))
 	if header.Size > maxSize {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"success": false,
@@ -253,7 +253,7 @@ func DownloadTranscriptionResult(c *gin.Context) {
 	}
 	
 	// 构建文件路径
-	resultDir := filepath.Join(common.GetOrDefault("STORAGE_PATH", "./data/transcription"), "results")
+	resultDir := filepath.Join(common.GetEnvOrDefaultString("STORAGE_PATH", "./data/transcription"), "results")
 	filename := fmt.Sprintf("%d_result.%s", taskID, format)
 	filePath := filepath.Join(resultDir, filename)
 	
@@ -329,7 +329,7 @@ func PreviewTranscriptionResult(c *gin.Context) {
 		})
 	case "json":
 		// 读取JSON结果文件
-		resultDir := filepath.Join(common.GetOrDefault("STORAGE_PATH", "./data/transcription"), "results")
+		resultDir := filepath.Join(common.GetEnvOrDefaultString("STORAGE_PATH", "./data/transcription"), "results")
 		filename := fmt.Sprintf("%d_result.json", taskID)
 		filePath := filepath.Join(resultDir, filename)
 		

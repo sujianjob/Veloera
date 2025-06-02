@@ -38,6 +38,13 @@ type Channel struct {
 	Setting           *string `json:"setting" gorm:"type:text"`
 	ParamOverride     *string `json:"param_override" gorm:"type:text"`
 	ModelPrefix       *string `json:"model_prefix" gorm:"type:varchar(64);default:''"`
+
+	// 转录服务相关字段
+	EngineType         int    `json:"engine_type" gorm:"default:0"`
+	MaxFileSize        int64  `json:"max_file_size" gorm:"default:104857600"`
+	MaxDuration        int    `json:"max_duration" gorm:"default:3600"`
+	SupportedFormats   string `json:"supported_formats" gorm:"default:'mp3,mp4,wav,m4a,flac'"`
+	SupportedLanguages string `json:"supported_languages" gorm:"default:'zh,en,auto'"`
 }
 
 func (channel *Channel) GetModels() []string {
@@ -100,6 +107,18 @@ func GetAllChannels(startIdx int, num int, selectAll bool, idSort bool) ([]*Chan
 		err = DB.Order(order).Find(&channels).Error
 	} else {
 		err = DB.Order(order).Limit(num).Offset(startIdx).Omit("key").Find(&channels).Error
+	}
+	return channels, err
+}
+
+func GetChannelsByType(channelType int) ([]*Channel, error) {
+	var channels []*Channel
+	var err error
+	if channelType == 0 {
+		// 获取所有渠道
+		err = DB.Order("priority desc").Find(&channels).Error
+	} else {
+		err = DB.Where("type = ?", channelType).Order("priority desc").Find(&channels).Error
 	}
 	return channels, err
 }
@@ -569,4 +588,8 @@ func BatchSetChannelTag(ids []int, tag *string) error {
 
 	// 提交事务
 	return tx.Commit().Error
+}
+
+func DeleteChannelById(id int) error {
+	return DB.Delete(&Channel{}, id).Error
 }

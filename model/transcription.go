@@ -4,10 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"time"
-	"veloera/common"
 	"veloera/constant"
-
-	"gorm.io/gorm"
 )
 
 // TranscriptionTask 转录任务模型

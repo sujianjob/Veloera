@@ -27,11 +27,14 @@ type Log struct {
 	CompletionTokens int    `json:"completion_tokens" gorm:"default:0"`
 	UseTime          int    `json:"use_time" gorm:"default:0"`
 	IsStream         bool   `json:"is_stream" gorm:"default:false"`
-	ChannelId        int    `json:"channel" gorm:"index"`
-	ChannelName      string `json:"channel_name" gorm:"->"`
-	TokenId          int    `json:"token_id" gorm:"default:0;index"`
-	Group            string `json:"group" gorm:"index"`
-	Other            string `json:"other"`
+	ChannelId        int     `json:"channel" gorm:"index"`
+	ChannelName      string  `json:"channel_name" gorm:"->"`
+	TokenId          int     `json:"token_id" gorm:"default:0;index"`
+	Group            string  `json:"group" gorm:"index"`
+	Other            string  `json:"other"`
+	FileSize         *int64  `json:"file_size,omitempty" gorm:"default:null"`
+	Duration         *int    `json:"duration,omitempty" gorm:"default:null"`
+	TaskType         *string `json:"task_type,omitempty" gorm:"default:null"`
 }
 
 const (

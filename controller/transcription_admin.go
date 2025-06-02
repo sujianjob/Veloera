@@ -4,11 +4,15 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"veloera/common"
 	"veloera/constant"
 	"veloera/model"
+	"veloera/service"
 
 	"github.com/gin-gonic/gin"
 )
+
+var adminTranscriptionService = service.NewTranscriptionService()
 
 // GetAllTranscriptionTasks 管理员获取所有转录任务
 func GetAllTranscriptionTasks(c *gin.Context) {
@@ -192,7 +196,7 @@ func CreateTranscriptionEngine(c *gin.Context) {
 		Weight:             req.Weight,
 		Status:             req.Status,
 		Group:              req.GroupName,
-		CreatedTime:        GetTimestamp(),
+		CreatedTime:        common.GetTimestamp(),
 	}
 	
 	if err := channel.Insert(); err != nil {
@@ -391,7 +395,7 @@ func TestTranscriptionEngine(c *gin.Context) {
 	}
 	
 	// 创建适配器并进行健康检查
-	adaptor, err := transcriptionService.GetTranscriptionAdaptor(channelID)
+	adaptor, err := adminTranscriptionService.GetTranscriptionAdaptor(channelID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"success": false,
@@ -412,7 +416,7 @@ func TestTranscriptionEngine(c *gin.Context) {
 			"data": gin.H{
 				"status":       "failed",
 				"error":        err.Error(),
-				"test_time":    GetTimestamp(),
+				"test_time":    common.GetTimestamp(),
 				"auto_disabled": true,
 			},
 		})
@@ -420,7 +424,7 @@ func TestTranscriptionEngine(c *gin.Context) {
 	}
 	
 	// 更新测试时间和状态
-	channel.TestTime = GetTimestamp()
+	channel.TestTime = common.GetTimestamp()
 	if channel.Status == 3 { // 如果之前是自动禁用，恢复为启用
 		channel.Status = 1
 	}

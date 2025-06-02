@@ -37,10 +37,10 @@ func NewTranscriptionService() *TranscriptionService {
 	return &TranscriptionService{
 		adaptorFactory: transcription.GlobalAdaptorFactory,
 		storageConfig: &StorageConfig{
-			Type:          common.GetOrDefault("STORAGE_TYPE", "local"),
-			LocalPath:     common.GetOrDefault("STORAGE_PATH", "./data/transcription"),
-			MaxSize:       int64(common.GetOrDefaultInt("MAX_FILE_SIZE", 100*1024*1024)),
-			RetentionDays: common.GetOrDefaultInt("FILE_RETENTION_DAYS", 30),
+			Type:          common.GetEnvOrDefaultString("STORAGE_TYPE", "local"),
+			LocalPath:     common.GetEnvOrDefaultString("STORAGE_PATH", "./data/transcription"),
+			MaxSize:       int64(common.GetEnvOrDefault("MAX_FILE_SIZE", 100*1024*1024)),
+			RetentionDays: common.GetEnvOrDefault("FILE_RETENTION_DAYS", 30),
 		},
 	}
 }
@@ -152,7 +152,7 @@ func (ts *TranscriptionService) processTranscriptionAsync(task *model.Transcript
 	ctx := context.Background()
 	
 	// 获取转录引擎
-	adaptor, err := ts.getTranscriptionAdaptor(task.ChannelID)
+	adaptor, err := ts.GetTranscriptionAdaptor(task.ChannelID)
 	if err != nil {
 		task.UpdateStatus(constant.TaskStatusFailed, 0, "获取转录引擎失败: "+err.Error())
 		ts.logTranscriptionEvent(task, constant.LogTypeTranscriptionFailed, "获取转录引擎失败")
@@ -366,8 +366,8 @@ func (ts *TranscriptionService) selectTranscriptionEngine(language, fileType str
 	return bestChannel, nil
 }
 
-// getTranscriptionAdaptor 获取转录适配器
-func (ts *TranscriptionService) getTranscriptionAdaptor(channelID int) (transcription.TranscriptionAdaptor, error) {
+// GetTranscriptionAdaptor 获取转录适配器
+func (ts *TranscriptionService) GetTranscriptionAdaptor(channelID int) (transcription.TranscriptionAdaptor, error) {
 	channel, err := model.GetChannelById(channelID, false)
 	if err != nil {
 		return nil, fmt.Errorf("获取渠道信息失败: %w", err)
