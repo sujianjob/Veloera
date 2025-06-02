@@ -2,7 +2,6 @@ package controller
 
 import (
 	"fmt"
-	"io"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -274,6 +273,11 @@ func DownloadTranscriptionResult(c *gin.Context) {
 	c.File(filePath)
 	
 	// 记录下载日志
+	var tokenId int
+	if task.TokenID != nil {
+		tokenId = *task.TokenID
+	}
+
 	log := &model.Log{
 		UserId:    userID,
 		CreatedAt: common.GetTimestamp(),
@@ -281,9 +285,13 @@ func DownloadTranscriptionResult(c *gin.Context) {
 		Content:   fmt.Sprintf("下载转录结果: %s", filename),
 		ModelName: task.ModelName,
 		ChannelId: task.ChannelID,
-		TokenId:   task.TokenID,
+		TokenId:   tokenId,
 	}
-	log.Insert()
+
+	err = model.LOG_DB.Create(log).Error
+	if err != nil {
+		fmt.Printf("failed to record download log: %s\n", err.Error())
+	}
 }
 
 // PreviewTranscriptionResult 预览转录结果
@@ -393,7 +401,7 @@ func CancelTranscriptionTask(c *gin.Context) {
 	
 	// 退还配额
 	if task.QuotaCost > 0 {
-		model.IncreaseUserQuota(userID, task.QuotaCost)
+		model.IncreaseUserQuota(userID, task.QuotaCost, false)
 	}
 	
 	c.JSON(http.StatusOK, gin.H{

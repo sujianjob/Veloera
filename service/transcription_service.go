@@ -6,7 +6,6 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"time"
 	"veloera/common"
@@ -98,7 +97,6 @@ func (ts *TranscriptionService) CreateTranscriptionTask(userID int, tokenID *int
 
 // ProcessTranscriptionTask 处理转录任务
 func (ts *TranscriptionService) ProcessTranscriptionTask(task *model.TranscriptionTask, fileReader io.Reader) error {
-	ctx := context.Background()
 	
 	// 更新任务状态为上传中
 	if err := task.UpdateStatus(constant.TaskStatusUploading, 10, ""); err != nil {
@@ -345,7 +343,7 @@ func (ts *TranscriptionService) selectTranscriptionEngine(language, fileType str
 				// 检查是否支持该文件格式
 				supportedFormats := strings.Split(channel.SupportedFormats, ",")
 				if contains(supportedFormats, fileType) {
-					availableChannels = append(availableChannels, channel)
+					availableChannels = append(availableChannels, *channel)
 				}
 			}
 		}
@@ -358,7 +356,7 @@ func (ts *TranscriptionService) selectTranscriptionEngine(language, fileType str
 	// 简单的负载均衡：选择权重最高的渠道
 	bestChannel := &availableChannels[0]
 	for i := 1; i < len(availableChannels); i++ {
-		if availableChannels[i].Weight > bestChannel.Weight {
+		if *availableChannels[i].Weight > *bestChannel.Weight {
 			bestChannel = &availableChannels[i]
 		}
 	}
@@ -375,7 +373,7 @@ func (ts *TranscriptionService) GetTranscriptionAdaptor(channelID int) (transcri
 	
 	config := &transcription.AdaptorConfig{
 		APIKey:  channel.Key,
-		BaseURL: channel.BaseURL,
+		BaseURL: *channel.BaseURL,
 		Timeout: 300, // 5分钟超时
 	}
 	
@@ -421,11 +419,16 @@ func (ts *TranscriptionService) preDeductQuota(userID, amount int) error {
 
 // refundQuota 退还配额
 func (ts *TranscriptionService) refundQuota(userID, amount int, reason string) error {
-	return model.IncreaseUserQuota(userID, amount)
+	return model.IncreaseUserQuota(userID, amount, false)
 }
 
 // logTranscriptionEvent 记录转录事件日志
 func (ts *TranscriptionService) logTranscriptionEvent(task *model.TranscriptionTask, logType, content string) {
+	var tokenId int
+	if task.TokenID != nil {
+		tokenId = *task.TokenID
+	}
+
 	log := &model.Log{
 		UserId:            task.UserID,
 		CreatedAt:         time.Now().Unix(),
@@ -440,13 +443,16 @@ func (ts *TranscriptionService) logTranscriptionEvent(task *model.TranscriptionT
 		UseTime:           0,
 		IsStream:          false,
 		ChannelId:         task.ChannelID,
-		TokenId:           task.TokenID,
+		TokenId:           tokenId,
 		FileSize:          &task.FileSize,
 		Duration:          task.Duration,
 		TaskType:          &logType,
 	}
 	
-	log.Insert()
+	err := model.LOG_DB.Create(log).Error
+	if err != nil {
+		fmt.Printf("failed to record transcription log: %s\n", err.Error())
+	}
 }
 
 // sendTaskCompletionNotification 发送任务完成通知
